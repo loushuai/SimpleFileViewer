@@ -36,7 +36,7 @@ public class MainActivity extends ListActivity {
         String sDStateString = Environment.getExternalStorageState();
         if(sDStateString.equals(Environment.MEDIA_MOUNTED)) {
             File SDFile = Environment.getExternalStorageDirectory();
-            curPath = SDFile.getAbsolutePath();
+            curPath = SDFile.getAbsolutePath() + "/";
             itemList = getData(curPath);
             adapter = new SimpleAdapter(this, itemList, R.layout.list_item, from, to);
             setListAdapter(adapter);
@@ -46,14 +46,19 @@ public class MainActivity extends ListActivity {
     private List<Map<String, Object>> getData(String path) {
         List<Map<String, Object>> list = new ArrayList<Map<String,Object>>();
 
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put(COLUMN_NAME_NAME, "..");
+        list.add(map);
+
         File file = new File(path);
         if (file.listFiles().length > 0) {
-            Map<String, Object> map = new HashMap<String, Object>();
-            map.put(COLUMN_NAME_NAME, "..");
-            list.add(map);
             for (File f : file.listFiles()) {
                 map = new HashMap<String, Object>();
-                map.put(COLUMN_NAME_NAME, f.getName());
+                String name = f.getName();
+                if (f.isDirectory()) {
+                    name += "/";
+                }
+                map.put(COLUMN_NAME_NAME, name);
                 list.add(map);
 
                 Log.d("Scan", " path " + path + f.getName());
@@ -70,7 +75,7 @@ public class MainActivity extends ListActivity {
         String path;
         if (position > 0) {
             pathHistory.push(curPath);
-            path = curPath + "/" + itemList.get(position).get(COLUMN_NAME_NAME);
+            path = curPath + itemList.get(position).get(COLUMN_NAME_NAME);
         } else { // uplevel
             if (!pathHistory.empty())
                 path = pathHistory.pop();
@@ -82,6 +87,7 @@ public class MainActivity extends ListActivity {
         File file = new File(path);
         if (file.isDirectory()) {
             updateList(path);
+            curPath = path;
         } else {
             Toast toast = Toast.makeText(getApplicationContext(), itemList.get(position).get(COLUMN_NAME_NAME) + " is a file", Toast.LENGTH_SHORT);
             toast.show();
